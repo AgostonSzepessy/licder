@@ -1,0 +1,6 @@
+[package]
+name = "licder"
+version = "0.1.0"
+authors = ["Agoston Szepessy <agoston.the.dev@gmail.com>"]
+
+[dependencies]
