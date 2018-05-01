@@ -29,6 +29,14 @@ impl LicenseType {
                 None => unreachable!()
         }
     }
+
+    pub fn ls() -> Vec<&'static str> {
+        vec![
+            {{~#each licenses}}
+                "{{name}}",
+            {{/each}}
+        ]
+    }
 }
 
 impl From<String> for LicenseType {

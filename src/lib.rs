@@ -1,4 +1,3 @@
-extern crate reqwest;
-extern crate clap;
+mod license_type;
 
-pub mod license_type;
+pub use license_type::LicenseType;
