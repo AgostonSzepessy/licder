@@ -1,57 +1,114 @@
-use std::convert::From;
+use std::fmt;
+use std::error;
+
+use regex::Regex;
 
 use self::LicenseType::*;
 
+/// The types of errors that can occur from a `LicenseType`.
+#[derive(Debug, PartialEq)]
+pub enum LicenseTypeError {
+    /// License not supported by licder
+    LicenseNotSupported(String),
+}
+
+impl fmt::Display for LicenseTypeError {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match *self {
+            LicenseTypeError::LicenseNotSupported(ref err) => write!(f, "License {} not supported by licder", err),
+        }
+    }
+}
+
+impl error::Error for LicenseTypeError {
+    fn description(&self) -> &str {
+        match *self {
+            LicenseTypeError::LicenseNotSupported(..) => "License not supported by licder",
+        }
+    }
+
+    fn cause(&self) -> Option<&error::Error> {
+        match *self {
+            LicenseTypeError::LicenseNotSupported(..) => None,
+        }
+    }
+}
+
+/// The different types of licenses that licder can download.
+#[derive(Debug, PartialEq)]
 pub enum LicenseType {
     {{#each licenses}}
         {{~@key}},
     {{/each}}
-    None,
 }
 
 impl LicenseType {
+
+    /// Tries to create an instance of `LicenseType` from the abbreviation of the license.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// extern crate licder;
+    ///
+    /// let license = licder::LicenseType::try_from("MPL-2.0");
+    /// assert_eq!(Ok(licder::LicenseType::MPL20), license);
+    /// ```
+    pub fn try_from(s: &'static str) -> Result<Self, LicenseTypeError> {
+        let re = Regex::new(r"-|\.").unwrap();
+        let res = re.replace_all(s, "");
+        match &*res {
+            {{~#each licenses}}
+                "{{~@key}}" => Ok(LicenseType::{{~@key}}),
+            {{~/each}}
+                _ => Err(LicenseTypeError::LicenseNotSupported(s.to_string())),
+        }
+    }
+
     /// Returns the name of the license.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// extern crate licder;
+    ///
+    /// let license = licder::LicenseType::try_from("MPL-2.0").unwrap();
+    /// assert_eq!("Mozilla Public License 2.0", license.name());
+    /// ```
     pub fn name(&self) -> &'static str {
         match *self {
             {{~#each licenses}}
                 {{@key}} => "{{~name}}",
             {{/each}}
-                None => unreachable!()
         }
     }
 
     /// Returns the URL at which the license is located.
+    ///
+    /// # Example
+    /// 
+    /// ```
+    /// extern crate licder;
+    ///
+    /// let license = licder::LicenseType::try_from("MPL-2.0").unwrap();
+    /// assert_eq!("https://www.mozilla.org/media/MPL/2.0/index.815ca599c9df.txt", license.url());
+    /// ```
     pub fn url(&self) -> &'static str {
         match *self {
             {{~#each licenses}}
                 {{@key}} => "{{~url}}",
             {{~/each}}
-                None => unreachable!()
         }
     }
 
+    /// Returns a `Vec` containing all licenses with their abbreviation and full name
+    /// separated by a dash. E.g. `MPL 2.0 - Mozilla Public License 2.0`
     pub fn ls() -> Vec<&'static str> {
         vec![
             {{~#each licenses}}
-                "{{name}}",
+                "{{abbreviation}} - {{name}}",
             {{/each}}
         ]
     }
 }
 
-impl From<String> for LicenseType {
-    fn from(s: String) -> Self {
-        LicenseType::from(&*s)
-    }
-}
-
-impl<'a> From<&'a str> for LicenseType {
-    fn from(s: &'a str) -> Self {
-        match s {
-            {{~#each licenses}}
-                "{{~@key}}" => LicenseType::{{~@key}},
-            {{~/each}}
-                _ => LicenseType::None,
-        }
-    }
-}
