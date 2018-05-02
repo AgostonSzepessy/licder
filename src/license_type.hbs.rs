@@ -51,10 +51,10 @@ impl LicenseType {
     /// ```
     /// extern crate licder;
     ///
-    /// let license = licder::LicenseType::try_from("MPL-2.0");
+    /// let license = licder::LicenseType::try_from_str("MPL-2.0");
     /// assert_eq!(Ok(licder::LicenseType::MPL20), license);
     /// ```
-    pub fn try_from(s: &'static str) -> Result<Self, LicenseTypeError> {
+    pub fn try_from_str(s: &str) -> Result<Self, LicenseTypeError> {
         let re = Regex::new(r"-|\.").unwrap();
         let res = re.replace_all(s, "");
         match &*res {
@@ -65,6 +65,10 @@ impl LicenseType {
         }
     }
 
+    pub fn try_from_string(s: String) -> Result<Self, LicenseTypeError> {
+        Self::try_from_str(&*s)
+    }
+
     /// Returns the name of the license.
     ///
     /// # Example
@@ -72,7 +76,7 @@ impl LicenseType {
     /// ```
     /// extern crate licder;
     ///
-    /// let license = licder::LicenseType::try_from("MPL-2.0").unwrap();
+    /// let license = licder::LicenseType::try_from_str("MPL-2.0").unwrap();
     /// assert_eq!("Mozilla Public License 2.0", license.name());
     /// ```
     pub fn name(&self) -> &'static str {
@@ -90,13 +94,31 @@ impl LicenseType {
     /// ```
     /// extern crate licder;
     ///
-    /// let license = licder::LicenseType::try_from("MPL-2.0").unwrap();
+    /// let license = licder::LicenseType::try_from_str("MPL-2.0").unwrap();
     /// assert_eq!("https://www.mozilla.org/media/MPL/2.0/index.815ca599c9df.txt", license.url());
     /// ```
     pub fn url(&self) -> &'static str {
         match *self {
             {{~#each licenses}}
                 {{@key}} => "{{~url}}",
+            {{~/each}}
+        }
+    }
+
+    /// Returns the abbreviation of the license.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// extern crate licder;
+    ///
+    /// let license = licder::LicenseType::try_from_str("MPL-2.0").unwrap();
+    /// assert_eq!("MPL-2.0", license.abbreviation());
+    /// ```
+    pub fn abbreviation(&self) -> &'static str {
+        match *self {
+            {{~#each licenses}}
+                {{@key}} => "{{~abbreviation}}",
             {{~/each}}
         }
     }
@@ -111,4 +133,3 @@ impl LicenseType {
         ]
     }
 }
-
